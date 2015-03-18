@@ -46,6 +46,19 @@ adminRouter.get('/posts', function(req, res) {
   res.send('posts page');
 });
 
+
+
+// Login form
+app.route('/login')
+  .get(function(req, res) {
+    res.send('[GET] login form');
+  })
+  .post(function(req, res) {
+    res.send('[POST] login form');
+  });
+
+
+
 // apply all the routes back to our application
 app.use('/admin', adminRouter);
 
