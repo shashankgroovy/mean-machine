@@ -1,66 +1,35 @@
 "use-strict"
 
-// Method 1
-// expressjs way
+var express = require('express');
+var app  = express();
+var bodyParser = require('body-parser');
+var morgan = require('morgan');
+var mongoose = require('mongoose');
+var port = process.env.PORT || 3000;
 
-var express = require('express'),
-    app = express(),
-    path = require('path');
+// use body-parser to grab information from POST requests
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-app.get('/' ,function(req, res) {
-  res.sendFile(path.join(__dirname + '/index.html'));
-})
-
-// using the express Router instance to channel our requests
-var adminRouter = express.Router();
-
-/* router.use() -
- * A route middleware that will execute something before a request is processed.
- */
-adminRouter.use(function(req, res, next) {
-  console.log(req.method, req.url);
+app.use(function(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization');
   next();
 });
 
-// define the routes
-adminRouter.get('/', function(req, res) {
-  res.send('dashboard');
+// log all requests to the console
+app.use(morgan('dev'));
+
+app.get('/', function(req, res) {
+  res.send('Dashboard HomePage');
 });
 
-adminRouter.get('/users', function(req, res) {
-  res.send('users page');
+var apiRouter = express.Router();
+apiRouter.get('/', function(req, res) {
+  res.json({ message: 'welcome to the api' });
 });
 
-// add a validation check before GET request is executed
-adminRouter.param('name', function(req, res, next, name) {
-  console.log('Running validations on', name);
-  req.name == name;
-  next();
-});
-
-adminRouter.get('/users/:name', function(req, res) {
-  res.send('hello ' + req.params.name + '!');
-});
-
-adminRouter.get('/posts', function(req, res) {
-  res.send('posts page');
-});
-
-
-
-// Login form
-app.route('/login')
-  .get(function(req, res) {
-    res.send('[GET] login form');
-  })
-  .post(function(req, res) {
-    res.send('[POST] login form');
-  });
-
-
-
-// apply all the routes back to our application
-app.use('/admin', adminRouter);
-
-app.listen(3000);
-console.log('Listening at http://localhost:3000');
+app.use('/api', apiRouter);
+app.listen(port);
+console.log('Listening on port ' + port);
