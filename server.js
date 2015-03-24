@@ -5,9 +5,11 @@ var app  = express();
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
 var path = require('path');
-var port = process.env.PORT || 3000;
+var jwt = require('jsonwebtoken');
 
+var port = process.env.PORT || 8000;
 var User = require('./models/user');
+var secretToken = 'the-mean-machine'
 
 
 // use body-parser to grab information from POST requests
@@ -26,6 +28,44 @@ app.use(morgan('dev'));
 
 // Routes API
 var apiRouter = express.Router();
+
+apiRouter.post('/authenticate', function(req, res) {
+  User.findOne({
+    username: req.body.username
+  }).select('name username password').exec(function(err, user) {
+    if (err) throw err;
+
+    // no user with that username found
+    if (!user) {
+      res.json({
+        success: false,
+        message: 'Authentication failed. User not found.'
+      })
+    } else if(user) {
+      //check if password matches
+      var validPassword = user.comparePassword(req.body.password);
+      if (!validPassword) {
+        res.json({
+          success: false,
+          message: 'Authentication failed. Wrong password.'
+        });
+      } else {
+        // user found and correct password
+        var token = jwt.sign({
+          name: user.name,
+            username: user.username
+        }, secretToken, {
+          expiresinMinutes: 1440 // 24 hours
+        });
+        res.json({
+          success: true,
+          message: 'Token received',
+          token: token
+        });
+      }
+    }
+  });
+});
 
 apiRouter.use(function(req, res, next) {
   console.log('This is a RESTful api');
